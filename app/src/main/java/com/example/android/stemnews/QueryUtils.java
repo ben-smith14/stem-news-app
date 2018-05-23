@@ -25,6 +25,9 @@ import java.util.List;
 public final class QueryUtils {
 
     private static final String LOG_TAG = QueryUtils.class.getName();
+    private static final int READ_TIMEOUT = 10000;
+    private static final int CONNECT_TIMEOUT = 15000;
+    private static final int OK_RESPONSE = 200;
 
     private QueryUtils() { // Cannot instantiate this class
     }
@@ -95,8 +98,8 @@ public final class QueryUtils {
             Set the time limits in milliseconds for starting to read data and for establishing
             the connection
             */
-            serverConnection.setReadTimeout(10000);
-            serverConnection.setConnectTimeout(15000);
+            serverConnection.setReadTimeout(READ_TIMEOUT);
+            serverConnection.setConnectTimeout(CONNECT_TIMEOUT);
 
             // Indicate that we want to receive data and then make the connection
             serverConnection.setRequestMethod("GET");
@@ -106,7 +109,7 @@ public final class QueryUtils {
             Get the input stream and then parse it into the JSON response String, checking for
             the successful response code
             */
-            if (serverConnection.getResponseCode() == 200) {
+            if (serverConnection.getResponseCode() == OK_RESPONSE) {
                 responseStream = serverConnection.getInputStream();
                 jsonResponse = readFromStream(responseStream);
             } else {

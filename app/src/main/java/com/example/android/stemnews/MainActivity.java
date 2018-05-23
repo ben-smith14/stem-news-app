@@ -176,7 +176,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                 articles are currently being loaded in and the scroll event was user controlled,
                 prepare to load the next page of results into the adapter
                 */
-                if (absListView.getLastVisiblePosition() == totalItemCount - 1 && !articlesLoading && userScrolled) {
+                if (absListView.getLastVisiblePosition() == (totalItemCount - 1) && !articlesLoading && userScrolled) {
                     // Find the parameter in the String array that specifies page number
                     int pageParamIndex = getPageParam();
 
