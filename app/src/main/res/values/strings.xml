@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">STEM News</string>
+
+    <string name="see_more">Click the item to see the full article</string>
+    <string name="multiple_authors">\u0020&amp; &#8230;</string>
+    <string name="menu_refresh">Refresh Articles/Back to Top</string>
+    <string name="page_param">page=</string>
+    <string name="current_page_key">currentPage</string>
+
+    <!-- Error messages -->
+    <string name="no_browser_app">No internet browsers available</string>
+    <string name="no_articles">No articles found</string>
+    <string name="no_internet_connection">No internet connection</string>
+
+    <!-- JSON keys -->
+    <string name="response_key">response</string>
+    <string name="status_key">status</string>
+    <string name="results_key">results</string>
+    <string name="webTitle_key">webTitle</string>
+    <string name="sectionName_key">sectionName</string>
+    <string name="tags_key">tags</string>
+    <string name="webPublicationDate_key">webPublicationDate</string>
+    <string name="webUrl_key">webUrl</string>
+    <string name="message_key">message</string>
+</resources>

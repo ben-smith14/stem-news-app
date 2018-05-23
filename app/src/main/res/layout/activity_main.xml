@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/listViewBackground"
+    tools:context=".MainActivity">
+
+    <!-- Insert the custom toolbar at the top of the activity and set
+     its style to the dark theme so that the text and icons are white-->
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorPrimary"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar" />
+
+    <!-- Swipe list down at the top to refresh it -->
+    <android.support.v4.widget.SwipeRefreshLayout
+        android:id="@+id/swipe_refresh"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/toolbar">
+
+        <!-- Layout for the list of articles -->
+        <ListView
+            android:id="@+id/article_list"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:divider="@null"
+            android:dividerHeight="8dp"
+            android:drawSelectorOnTop="true"
+            android:orientation="vertical"
+            android:padding="8dp" />
+
+    </android.support.v4.widget.SwipeRefreshLayout>
+
+    <!-- Empty view is only visible when the list has no items -->
+    <TextView
+        android:id="@+id/empty_state_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+        android:textColor="@color/colorPrimary" />
+
+    <!-- Loading indicator is only shown during the first load -->
+    <ProgressBar
+        android:id="@+id/progress_circle"
+        style="@style/Widget.AppCompat.ProgressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true" />
+
+</RelativeLayout>
