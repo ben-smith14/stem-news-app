@@ -30,18 +30,18 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
     /**
      * The query URL for news article data from The Guardian web API.
-     * <p>
+     *
      * I use my personal API key from the project gradle.properties file, but this is not included
      * in the GitHub repo, so other users will need to get their own API Key from:
      * https://open-platform.theguardian.com/access/on (or use the "test" key).
-     * <p>
+     *
      * To include your personal key in the app, add it to the project's gradle.properties file
      * and use the following link as a guide to include it in your build.gradle (Module:app) file
      * under the name GuardianAPIKey:
      * https://medium.com/code-better/hiding-api-keys-from-your-android-repository-b23f5598b906
-     * <p>
-     * For test purposes, you can simply replace the GuardianAPIKey call in the gradle.properties
-     * file with the String "test", but this only gives you a limited number of calls to the servers.
+     *
+     * For test purposes, you can simply replace the GuardianAPIKey call in the build.gradle file
+     * with the String "test", but this only gives you a limited number of calls to the servers.
      */
     private static final String GUARDIAN_API_URL = "http://content.guardianapis.com/search";
     private String[] searchParameters = new String[]{
