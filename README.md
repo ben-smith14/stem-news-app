@@ -12,4 +12,6 @@ https://medium.com/code-better/hiding-api-keys-from-your-android-repository-b23f
 
 For test purposes, you can simply replace the GuardianAPIKey call in the build.gradle (Module:app) file with the String "test", but this only gives you a limited number of calls to the servers.
 
-This project was another of the significant tasks assigned to us in the Android Basics Nanodegree on udacity.com.
+This project was another of the significant tasks assigned to us in the Android Basics Nanodegree on udacity.com. Screenshots of it running can be seen below:
+
+![Alt text](https://github.com/ben-smith14/stem-news-app/blob/master/stem%20news%20imgs.png?raw=true "Some screenshots of the initial app running")
