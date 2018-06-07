@@ -14,4 +14,6 @@ For test purposes, you can simply replace the GuardianAPIKey call in the build.g
 
 This project was another of the significant tasks assigned to us in the Android Basics Nanodegree on udacity.com. Screenshots of it running can be seen below:
 
-![Alt text](https://github.com/ben-smith14/stem-news-app/blob/master/stem%20news%20imgs.png?raw=true "Some screenshots of the initial app running")
+![Alt text](https://github.com/ben-smith14/stem-news-app/blob/master/stem%20news%20imgs1.png?raw=true "Some screenshots of the initial app running")
+
+![Alt text](https://github.com/ben-smith14/stem-news-app/blob/master/stem%20news%20imgs2.png?raw=true "Some screenshots of the initial settings activity")
