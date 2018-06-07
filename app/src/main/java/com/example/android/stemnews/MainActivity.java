@@ -4,9 +4,11 @@ import android.app.LoaderManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.Loader;
+import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.preference.PreferenceManager;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -22,7 +24,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<List<NewsArticle>> {
 
@@ -30,27 +36,20 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
     /**
      * The query URL for news article data from The Guardian web API.
-     *
+     * <p>
      * I use my personal API key from the project gradle.properties file, but this is not included
      * in the GitHub repo, so other users will need to get their own API Key from:
      * https://open-platform.theguardian.com/access/on (or use the "test" key).
-     *
+     * <p>
      * To include your personal key in the app, add it to the project's gradle.properties file
      * and use the following link as a guide to include it in your build.gradle (Module:app) file
      * under the name GuardianAPIKey:
      * https://medium.com/code-better/hiding-api-keys-from-your-android-repository-b23f5598b906
-     *
+     * <p>
      * For test purposes, you can simply replace the GuardianAPIKey call in the build.gradle file
      * with the String "test", but this only gives you a limited number of calls to the servers.
      */
     private static final String GUARDIAN_API_URL = "http://content.guardianapis.com/search";
-    private String[] searchParameters = new String[]{
-            "q=science%20OR%20technology%20OR%20engineering%20OR%20mathematics",
-            "order-by=newest",
-            "page-size=10",
-            "page=1",
-            "show-tags=contributor",
-            "api-key=" + BuildConfig.API_KEY};
 
     private ListView articleListView;
     private ArticleAdapter articleAdapter;
@@ -73,10 +72,8 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         // Retrieve the loading indicator circle view
         loadingIndicator = findViewById(R.id.progress_circle);
 
-        /*
-        Retrieve the current page value on an orientation change. Otherwise, set it to its
-        default initial value
-        */
+        /* Retrieve the current page value on an orientation change. Otherwise, set it to its
+        default initial value */
         if (savedInstanceState != null) {
             currentPage = savedInstanceState.getInt(getString(R.string.current_page_key));
         } else {
@@ -88,43 +85,26 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         articleRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
+                // Set the page parameter value back to 1 and refresh the article list
                 currentPage = 1;
-
-                // Find the parameter in the String array that specifies page number
-                int pageParamIndex = getPageParam();
-
-                // If it was found, set its value back to 1 and update the article list
-                if (pageParamIndex != -1) {
-                    searchParameters[pageParamIndex] = getString(R.string.page_param) + currentPage;
-
-                    articleListView.setEnabled(false);
-                    updateArticles(true);
-                } else {
-                    // Otherwise, show an error in the logs
-                    Log.e(LOG_TAG, "No page parameter in URL");
-                }
+                articleListView.setEnabled(false);
+                updateArticles(true);
             }
         });
 
-        /*
-        Retrieve the {@link ListView} in the layout and then add the empty state {@link TextView}
-        to it for when there is no data to display
-        */
+        /* Retrieve the {@link ListView} in the layout and then add the empty state {@link TextView}
+        to it for when there is no data to display */
         articleListView = findViewById(R.id.article_list);
         emptyStateView = findViewById(R.id.empty_state_text);
         articleListView.setEmptyView(emptyStateView);
 
-        /*
-        Create a new adapter that takes an empty list of earthquakes as its input and then link
-        the adapter to the {@link ListView}
-        */
+        /* Create a new adapter that takes an empty list of earthquakes as its input and then link
+        the adapter to the {@link ListView} */
         articleAdapter = new ArticleAdapter(this, new ArrayList<NewsArticle>());
         articleListView.setAdapter(articleAdapter);
 
-        /*
-        Set an item click listener on the {@link ListView} that sends an intent to any
-        available web browser to open the full selected article
-        */
+        /* Set an item click listener on the {@link ListView} that sends an intent to any
+        available web browser to open the full selected article */
         articleListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
@@ -134,11 +114,9 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                     // Prepare a browser-opening {@link Intent} by parsing the website URL into a URI
                     Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(clickedArticle.getWebURL()));
 
-                    /*
-                    Check that there is an application that can receive the intent and then
+                    /* Check that there is an application that can receive the intent and then
                     start the activity if there is. If there isn't one available, indicate this
-                    with a {@link Toast} message
-                    */
+                    with a {@link Toast} message */
                     if (browserIntent.resolveActivity(getPackageManager()) != null) {
                         startActivity(browserIntent);
                     } else {
@@ -148,10 +126,8 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
             }
         });
 
-        /*
-        Add a scroll listener to the {@link ListView} that loads in additional pages of data
-        if they are available when the user nears the bottom of the current list
-        */
+        /* Add a scroll listener to the {@link ListView} that loads in additional pages of data
+        if they are available when the user nears the bottom of the current list */
         articleListView.setOnScrollListener(new AbsListView.OnScrollListener() {
             private boolean userScrolled = false;
 
@@ -171,57 +147,28 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
             @Override
             public void onScroll(AbsListView absListView, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
-                /*
-                If the last visible item in the list is a given threshold from the bottom and no
-                articles are currently being loaded in and the scroll event was user controlled,
-                prepare to load the next page of results into the adapter
-                */
+                /* If the last visible item in the list is the last element AND no articles are
+                currently being loaded in AND the scroll event was user controlled, prepare to
+                load the next page of results into the adapter */
                 if (absListView.getLastVisiblePosition() == (totalItemCount - 1) && !articlesLoading && userScrolled) {
-                    // Find the parameter in the String array that specifies page number
-                    int pageParamIndex = getPageParam();
-
-                    /*
-                    If it was found, increase its value by 1 and update the article list. It
+                    /* Increase the results page number value by 1 and update the article list. It
                     does not matter if the currentPage value exceeds the query page size, as
                     this will just return no data and it will be handled by the
-                    {@link LoaderManager} callbacks
-                    */
-                    if (pageParamIndex != -1) {
-                        currentPage++;
-                        searchParameters[pageParamIndex] = getString(R.string.page_param) + currentPage;
+                    {@link LoaderManager} callbacks */
+                    currentPage++;
 
-                        /*
-                        Whilst the list is updating, show the loading indicator and prevent
-                        user interaction with the {@link ListView} underneath
-                        */
-                        loadingIndicator.setVisibility(View.VISIBLE);
-                        articleListView.setEnabled(false);
+                    /* Whilst the list is updating, show the loading indicator and prevent
+                    user interaction with the {@link ListView} underneath */
+                    loadingIndicator.setVisibility(View.VISIBLE);
+                    articleListView.setEnabled(false);
 
-                        updateArticles(true);
-                    } else {
-                        // Otherwise, show an error in the logs
-                        Log.e(LOG_TAG, "No page parameter in URL");
-                    }
+                    updateArticles(true);
                 }
             }
         });
 
         // Use a new {@link Loader} to create the first instance of the list
         updateArticles(false);
-    }
-
-    // Find the index of the parameter in the String array that specifies page number
-    private int getPageParam() {
-        int pageParamIndex = -1;
-
-        for (int i = 0; i < searchParameters.length; i++) {
-            if (searchParameters[i].contains(getString(R.string.page_param))) {
-                pageParamIndex = i;
-                break;
-            }
-        }
-
-        return pageParamIndex;
     }
 
     /**
@@ -235,38 +182,30 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     private void updateArticles(boolean listRefresh) {
         final int LOADER_ID = 1;
 
-        /*
-        Get a reference to the app's {@link ConnectivityManager} to check the state of
-        the device's network connectivity
-        */
+        /* Get a reference to the app's {@link ConnectivityManager} to check the state of
+        the device's network connectivity */
         ConnectivityManager deviceConnectivity = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         if (deviceConnectivity != null) {
             // Get details on the currently active network connection
             NetworkInfo deviceNetworkInfo = deviceConnectivity.getActiveNetworkInfo();
 
-            /*
-            If there is a network connection and information about it is available, fetch the
-            news data using the {@link ArticleLoader}
-            */
+            /* If there is a network connection and information about it is available, fetch the
+            news data using the {@link ArticleLoader} */
             if (deviceNetworkInfo != null && deviceNetworkInfo.isConnected()) {
                 // Indicate that the load has started
                 articlesLoading = true;
 
-                /*
-                Initialise the {@link ArticleLoader}. If we are refreshing the list instead of
+                /* Initialise the {@link ArticleLoader}. If we are refreshing the list instead of
                 creating it for the first time, use the restartLoader method instead to destroy
-                the existing one and create a new instance
-                */
+                the existing one and create a new instance */
                 if (listRefresh) {
                     getLoaderManager().restartLoader(LOADER_ID, null, this);
                 } else {
                     getLoaderManager().initLoader(LOADER_ID, null, this);
                 }
             } else {
-                /*
-                Otherwise, display a no internet connection error. Hide the loading indicator
-                as well so that the error message is clearer
-                */
+                /* Otherwise, display a no internet connection error. Hide the loading indicator
+                as well so that the error message is clearer */
                 loadingIndicator.setVisibility(View.GONE);
 
                 // Update empty state with no connection error message
@@ -281,16 +220,14 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     }
 
     @Override
-    public Loader<List<NewsArticle>> onCreateLoader(int i, Bundle bundle) {
+    public Loader<List<NewsArticle>> onCreateLoader(int i, Bundle bundle) {//
         // Create the full URL String
-        String fullUrl = createUrlString(GUARDIAN_API_URL, searchParameters);
+        String fullUrl = createUrlString();
 
-        /*
-        If the article list is refreshing or it is empty, create a new {@link ArticleLoader} with
+        /* If the article list is refreshing or it is empty, create a new {@link ArticleLoader} with
         no initial data. Otherwise, pass the existing data set to the loader so that it can be
         added to any new data that is obtained in the next HTTP request. Always force a new load
-        of data if we are creating a new instance of {@link ArticleLoader} as well
-        */
+        of data if we are creating a new instance of {@link ArticleLoader} as well */
         if (articleRefresh.isRefreshing() || articleAdapter.isEmpty()) {
             return new ArticleLoader(this, fullUrl, null, true);
         } else {
@@ -299,46 +236,67 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     }
 
     /**
-     * Create a full URL String for a HTTP request using the domain/host String and an array of
-     * parameters.
-     *
-     * @param domain           is a String containing the domain/host web URL.
-     * @param searchParameters is a String array containing the parameter names and values.
-     * @return the full URL String for the HTTP request.
+     * Create a full URL String for a HTTP request by using the domain/host String as a base and
+     * then appending the relevant parameters onto this.
      */
-    private String createUrlString(String domain, String[] searchParameters) {
-        // Begin the URL with the domain/host, a question mark and then the first parameter
-        StringBuilder fullUrl = new StringBuilder(domain + "?" + searchParameters[0]);
+    private String createUrlString() {
+        // Get the shared preference keys and values for the app
+        SharedPreferences defaultPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
-        // Add the additional parameters with ampersand separators
-        for (int i = 1; i < searchParameters.length; i++) {
-            String addParam = "&" + searchParameters[i];
-            fullUrl.append(addParam);
+        /* Retrieve the String value or String {@link Set} for each parameter from the preferences.
+         The second parameter is the default value for the preference if one has not already been
+         loaded into the app */
+        String orderBy = defaultPreferences.getString(
+                getString(R.string.settings_order_by_key),
+                getString(R.string.settings_order_by_default));
+
+        Set<String> searchCategories = defaultPreferences.getStringSet(
+                getString(R.string.settings_search_categories_key),
+                new HashSet<>(Arrays.asList(getResources().getStringArray(R.array.settings_search_categories_values))));
+
+        /* Combine all of the search category values into a single String, where they are
+         separated with the logical OR String */
+        StringBuilder categoriesParameter = new StringBuilder();
+        Iterator<String> categoriesIterator = searchCategories.iterator();
+        while (categoriesIterator.hasNext()) {
+            categoriesParameter.append(categoriesIterator.next());
+            if (categoriesIterator.hasNext()) {
+                String combiner = " " + getString(R.string.logical_OR) + " ";
+                categoriesParameter.append(combiner);
+            }
         }
 
-        return fullUrl.toString();
+        // Parse the base URL string into an {@link Uri} object
+        Uri baseUri = Uri.parse(GUARDIAN_API_URL);
+
+        // Prepare the base URI so that we can add query parameters to it
+        Uri.Builder uriBuilder = baseUri.buildUpon();
+
+        // Append the query parameters and their values
+        uriBuilder.appendQueryParameter("q", categoriesParameter.toString());
+        uriBuilder.appendQueryParameter("order-by", orderBy);
+        uriBuilder.appendQueryParameter("page-size", "10");
+        uriBuilder.appendQueryParameter("page", String.valueOf(currentPage));
+        uriBuilder.appendQueryParameter("show-tags", "contributor");
+        uriBuilder.appendQueryParameter("api-key", BuildConfig.API_KEY);
+
+        return uriBuilder.toString();
     }
 
     @Override
     public void onLoadFinished(Loader<List<NewsArticle>> loader, List<NewsArticle> articlesList) {
-        /*
-        Hide the loading indicator once the data has been loaded and set the empty state text to
-        display that no articles were found if it is used
-        */
+        /* Hide the loading indicator once the data has been loaded and set the empty state text to
+        display that no articles were found if it is used */
         loadingIndicator.setVisibility(View.GONE);
         emptyStateView.setText(R.string.no_articles);
 
-        /*
-        Store a temporary pointer to the articleList so that it is not lost when we clear the
-        articleAdapter
-        */
+        /* Store a temporary pointer to the articleList so that it is not lost when we clear the
+        articleAdapter */
         List<NewsArticle> tempArticleList = (articlesList != null) ? new ArrayList<>(articlesList) : null;
 
-        /*
-        Store the current first visible list item index position and its offset from the top of the
+        /* Store the current first visible list item index position and its offset from the top of the
         screen so that we can move the list back to the same exact position after new data has been
-        loaded into the adapter
-        */
+        loaded into the adapter */
         int firstItemIndex = articleListView.getFirstVisiblePosition();
         View firstItemView = articleListView.getChildAt(0);
         int topOffset = (firstItemView == null) ? 0 : (firstItemView.getTop() - articleListView.getPaddingTop());
@@ -347,8 +305,8 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         articleAdapter.clear();
         articleListView.requestLayout();
 
-        // If there is a valid list of {@link NewsArticle}s, then add them to the adapter's
-        // data set. Notify the {@link ListView} of this change again
+        /* If there is a valid list of {@link NewsArticle}s, then add them to the adapter's
+        data set. Notify the {@link ListView} of this change again */
         if (tempArticleList != null && !tempArticleList.isEmpty()) {
             articleAdapter.addAll(tempArticleList);
             articleListView.requestLayout();
@@ -359,10 +317,8 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
             articleListView.setEnabled(true);
         }
 
-        /*
-        Restore the list scroll position unless the list has been refreshed, in which case it
-        should go back to the top of the list
-        */
+        /* Restore the list scroll position unless the list has been refreshed, in which case it
+        should go back to the top of the list */
         if (articleRefresh.isRefreshing()) {
             articleListView.setSelection(0);
 
@@ -392,22 +348,23 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.menu_refresh:
+                /* Set the page parameter back to 1 and refresh the article list, disabling
+                interactions with the list whilst the load is taking place */
                 currentPage = 1;
+                articleRefresh.setRefreshing(true);
+                articleListView.setEnabled(false);
+                updateArticles(true);
+                return true;
+            case R.id.open_settings:
+                /* Set the default preference values the first time the user opens the settings
+                 screen. Use true for the last parameter when testing to reset the defaults each
+                 time the app is run and use false for the final build to keep the user's
+                 preferences after first installation */
+                PreferenceManager.setDefaultValues(this, R.xml.settings_main, false);
 
-                // Find the parameter in the String array that specifies page number
-                int pageParamIndex = getPageParam();
-
-                // If it was found, set its value back to 1 and refresh the article list
-                if (pageParamIndex != -1) {
-                    searchParameters[pageParamIndex] = getString(R.string.page_param) + currentPage;
-                    articleRefresh.setRefreshing(true);
-                    articleListView.setEnabled(false);
-                    updateArticles(true);
-                } else {
-                    // Otherwise, show an error in the logs
-                    Log.e(LOG_TAG, "No page parameter in URL");
-                }
-
+                // Open the Settings activity
+                Intent settingsIntent = new Intent(this, SettingsActivity.class);
+                startActivity(settingsIntent);
                 return true;
         }
 

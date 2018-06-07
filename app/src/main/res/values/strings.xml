@@ -2,18 +2,19 @@
 <resources>
     <string name="app_name">STEM News</string>
 
+    <!-- Main Activity and Error Messages-->
     <string name="see_more">Click the item to see the full article</string>
-    <string name="multiple_authors">\u0020&amp; &#8230;</string>
-    <string name="menu_refresh">Refresh Articles/Back to Top</string>
-    <string name="page_param">page=</string>
     <string name="current_page_key">currentPage</string>
+    <string name="menu_refresh">Refresh Articles</string>
+    <string name="settings_menu_item">Settings</string>
 
-    <!-- Error messages -->
     <string name="no_browser_app">No internet browsers available</string>
     <string name="no_articles">No articles found</string>
     <string name="no_internet_connection">No internet connection</string>
 
-    <!-- JSON keys -->
+    <!-- QueryUtils Class and JSON keys -->
+    <string name="multiple_authors">\u0020&amp; &#8230;</string>
+
     <string name="response_key">response</string>
     <string name="status_key">status</string>
     <string name="results_key">results</string>
@@ -23,4 +24,29 @@
     <string name="webPublicationDate_key">webPublicationDate</string>
     <string name="webUrl_key">webUrl</string>
     <string name="message_key">message</string>
+
+    <!-- Settings Activity -->
+    <string name="settings_title">News Settings</string>
+
+    <string name="settings_search_categories_label">Search Categories</string>
+    <string name="settings_search_categories_key" translatable="false">search_categories</string>
+    <string name="settings_search_categories_science_label">Science</string>
+    <string name="settings_search_categories_science_value" translatable="false">science</string>
+    <string name="settings_search_categories_technology_label">Technology</string>
+    <string name="settings_search_categories_technology_value" translatable="false">technology</string>
+    <string name="settings_search_categories_engineering_label">Engineering</string>
+    <string name="settings_search_categories_engineering_value" translatable="false">engineering</string>
+    <string name="settings_search_categories_mathematics_label">Mathematics</string>
+    <string name="settings_search_categories_mathematics_value" translatable="false">mathematics</string>
+    <string name="logical_OR" translatable="false">OR</string>
+
+    <string name="settings_order_by_label">Order By</string>
+    <string name="settings_order_by_key" translatable="false">order_by</string>
+    <string name="settings_order_by_default" translatable="false">@string/settings_order_by_newest_value</string>
+    <string name="settings_order_by_newest_label">Newest</string>
+    <string name="settings_order_by_newest_value" translatable="false">newest</string>
+    <string name="settings_order_by_oldest_label">Oldest</string>
+    <string name="settings_order_by_oldest_value" translatable="false">oldest</string>
+    <string name="settings_order_by_relevance_label">Relevance</string>
+    <string name="settings_order_by_relevance_value" translatable="false">relevance</string>
 </resources>
